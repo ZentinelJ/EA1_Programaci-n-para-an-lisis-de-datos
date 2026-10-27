@@ -42,7 +42,7 @@ scrappingv1-app/
 ├── README.md
 ├── requirements.txt
 ├── pyproject.toml / uv.lock             # alternativa con uv
-├── VillaAlvarez_JuanPablo_Analizando_EA1.ipynb   # limpieza, análisis y métricas con pandas
+├── Analizando_EA1.ipynb   # limpieza, análisis y métricas con pandas
 └── speed_scrapy/                         # proyecto Scrapy
     ├── scrapy.cfg
     ├── laptop_summary.csv                # salida del spider "laptops"
@@ -122,7 +122,30 @@ Métricas calculadas sobre los CSV del repositorio (`laptop_summary.csv` y `desk
 
 Valores faltantes en portátiles: `gpu` (3, equipos con gráficos integrados cuya ficha no tiene esa línea), `color` (5) y `original_price` (1, producto sin precio tachado).
 
-<!-- EJECUCION -->
+### Ejecución de verificación (26 de octubre de 2026, `DOWNLOAD_DELAY=30`)
+
+| Indicador | `laptops` | `desktops` |
+|---|--:|--:|
+| Páginas de listado recorridas | 3 | 1 |
+| Peticiones totales (incluye robots.txt y reintentos) | 31 | 24 |
+| Productos extraídos | 25 | 9 |
+| Respuestas `429 Too Many Requests` (reintentadas con éxito) | 2 | 13 |
+| Peticiones fallidas sin recuperar | 0 | 0 |
+| Tiempo de ejecución | 18,5 min | 14,5 min |
+
+Esta segunda ejecución devolvió **exactamente los mismos registros** que los CSV del repositorio, así que el scraper es reproducible. El servidor limitó la velocidad (código 429) aun con 30 s entre peticiones; el `RetryMiddleware` de Scrapy reintentó esas peticiones y no se perdió ningún producto, pero el tiempo total (33 min) superó la meta de 30 min.
+
+### Métricas de éxito
+
+| Métrica | Meta | Resultado | ¿Cumple? |
+|---|---|---|:-:|
+| Productos extraídos | ≥ 30 | 34 | ✔ |
+| Registros con precio final | 100 % | 100 % | ✔ |
+| Completitud de celdas | ≥ 90 % | 97,4 % | ✔ |
+| Duplicados tras la limpieza | 0 | 0 | ✔ |
+| Peticiones fallidas sin recuperar | 0 | 0 | ✔ |
+| Segunda ejecución igual a la primera | Sí | Sí | ✔ |
+| Tiempo total de extracción | < 30 min | 33,0 min | ✘ |
 
 ## Relación con CRISP-DM
 
