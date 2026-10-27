@@ -22,18 +22,16 @@ Construir un proceso automatizado, repetible y respetuoso con el sitio que convi
 - **robots.txt.** Las rutas que recorremos (`/categoria/…` y `/tienda/…`) **no** están prohibidas. El archivo solo bloquea rutas administrativas (`/wp-admin/`, `/wp-login.php`, `/wp-content/`, entre otras) y a los bots Yandex y Baiduspider. El proyecto tiene `ROBOTSTXT_OBEY = True`, así que Scrapy descarga y respeta ese archivo antes de cada petición.
 - **Pausas entre peticiones.** `CONCURRENT_REQUESTS_PER_DOMAIN = 1` (una petición a la vez) y `DOWNLOAD_DELAY = 15` segundos. El robots.txt declara además `Crawl-delay: 30`. Scrapy **no** aplica esa directiva por su cuenta, así que para cumplirla al pie de la letra se ejecuta con `-s DOWNLOAD_DELAY=30` (así se hizo la corrida de verificación de este README).
 - **Volumen bajo.** Son unas 40 peticiones por ejecución completa, sin saltarse controles de acceso, sin iniciar sesión y sin formularios.
-- **Datos personales (Ley 1581 de 2012).** Solo se extraen datos de **productos**: no se recogen comentarios, nombres de usuarios ni ningún dato que identifique a personas, así que no hay tratamiento de datos personales.
+- **Datos personales.** Solo se extraen datos de **productos**: no se recogen comentarios, nombres de usuarios ni ningún dato que identifique a personas, así que no hay tratamiento de datos personales.
 - **Uso.** Los datos se usan solo con fines académicos y no se redistribuyen con fines comerciales.
 
 ## ¿Por qué Scrapy?
 
-El docente aclaró en el encuentro del 21 de octubre de 2026 que basta con una de las tres herramientas vistas (BeautifulSoup, Selenium o Scrapy), siempre que se justifique la elección. Escogimos Scrapy por lo que encontramos al inspeccionar el sitio:
-
-1. **Los productos vienen en el HTML, sin JavaScript.** Una petición simple (`curl`) a la categoría ya trae los enlaces a los productos, y cada ficha trae precio, marca, existencias y descripción técnica en el HTML inicial. No hace falta un navegador real, así que **Selenium sobra**: sería más lento y pesado sin aportar nada.
+1. **Los productos vienen en el HTML, sin JavaScript.** Una petición simple (`curl`) a la categoría ya trae los enlaces a los productos, y cada ficha trae precio, marca, existencias y descripción técnica en el HTML inicial. 
 2. **Hay paginación y dos niveles de navegación.** Portátiles tiene 3 páginas de listado (`/page/2/`, `/page/3/`), y los datos útiles no están en el listado sino en la página de cada producto. Scrapy resuelve las dos cosas con `response.follow`: sigue el `<link rel="next">` de la paginación y entra a cada ficha con un *callback* aparte (`parse_detail`). También descarta solo las URL repetidas (en el listado cada producto aparece enlazado dos veces, en la imagen y en el título).
 3. **Ética configurable en un solo lugar.** `ROBOTSTXT_OBEY`, `DOWNLOAD_DELAY` y la concurrencia se definen en `settings.py`. Con BeautifulSoup + `requests` habría que programar a mano la lectura del robots.txt, las pausas y la cola de URL.
 4. **Limpieza separada de la extracción.** El *pipeline* (`pipelines.py`) convierte los precios de texto (`"El precio actual es: $7.509.000"`) a enteros y normaliza las existencias, sin mezclar esa lógica con los selectores.
-5. **Exportar es un parámetro.** `-O archivo.csv` (o `.json`) genera el archivo directamente con los campos del *item*, en UTF-8 (`FEED_EXPORT_ENCODING`). No hubo que escribir código de exportación.
+5. **Exportar es un parámetro.** `-O archivo.csv` (o `.json`) genera el archivo directamente con los campos del *item*, en UTF-8 (`FEED_EXPORT_ENCODING`). 
 
 ## Estructura del proyecto
 
@@ -172,6 +170,6 @@ Esta segunda ejecución devolvió **exactamente los mismos registros** que los C
 - Juan Pablo Villa Álvarez
 - Juan Manuel Arenas Rodríguez
 
-**Curso:** Programación para Análisis de Datos (IDSD_PRO_ANA_DATOS_540) · Ingeniería de Software y Datos
-**Institución:** Institución Universitaria Digital de Antioquia (IU Digital) · 2026-2, Bloque 2
+**Curso:** Programación para Análisis de Datos· Ingeniería de Software y Datos
+**Institución:** Institución Universitaria Digital de Antioquia (IU Digital) 
 **Docente:** Andrés Felipe Palacio Ángel
