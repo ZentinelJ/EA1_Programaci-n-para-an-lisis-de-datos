@@ -2,7 +2,7 @@
 
 Extracción con **Scrapy** de las fichas técnicas y los precios de los **portátiles** y los **computadores de escritorio** de la tienda colombiana [speedlogic.com.co](https://speedlogic.com.co), con limpieza y análisis descriptivo en **pandas**.
 
-> Proyecto académico de la *Evidencia de aprendizaje 1: Análisis y herramientas de extracción de datos* del curso Programación para Análisis de Datos (IU Digital, 2026-2).
+
 
 ## Objetivo
 
