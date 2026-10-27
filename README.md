@@ -81,7 +81,7 @@ scrapy crawl desktops -O desktop_summary.csv -s DOWNLOAD_DELAY=30
 
 `-O` sobrescribe el archivo (con `-o` se añadirían filas al final). `-s DOWNLOAD_DELAY=30` aplica el `Crawl-delay` del robots.txt; sin ese parámetro se usan los 15 s de `settings.py`.
 
-Para el análisis, abre `VillaAlvarez_JuanPablo_Analizando_EA1.ipynb` en VS Code o Jupyter con el kernel del `.venv` y ejecuta todas las celdas desde la raíz del repositorio. El notebook genera `speedlogic_productos_limpio.csv`.
+Para el análisis, abre `Analizando_EA1.ipynb` en VS Code o Jupyter con el kernel del `.venv` y ejecuta todas las celdas desde la raíz del repositorio. El notebook genera `speedlogic_productos_limpio.csv`.
 
 ## Campos extraídos
 
