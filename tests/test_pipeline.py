@@ -2,9 +2,9 @@
 
 No se conectan a Speedlogic: usan items creados a mano.
 """
-
 from speed_scrapy.items import Desktop_Items, Laptop_Items
 from speed_scrapy.pipelines import SpeedScrapyPipeline
+
 
 def procesar(item):
     return SpeedScrapyPipeline().process_item(item, spider=None)
@@ -60,3 +60,9 @@ def test_campos_none_no_rompen_el_pipeline():
     item = procesar(Desktop_Items())
     assert item.cpu is None
     assert item.final_price is None
+
+
+def test_stock_con_texto_desconocido_es_cero():
+    """Cualquier texto sin cantidad numerica se trata como sin existencias."""
+    item = procesar(Laptop_Items(stock="Sin existencias"))
+    assert item.stock == 0
