@@ -17,19 +17,16 @@ class SpeedScrapyPipeline:
             item.original_price = int(item.original_price.replace("$", "").replace(".", "").replace("El precio original era: ", "").strip())
 
         if item.final_price:
-             item.final_price = int(item.final_price.replace("$", "").replace(".", "").replace("El precio actual es: ", "").strip())
+            item.final_price = int(item.final_price.replace("$", "").replace(".", "").replace("El precio actual es: ", "").strip())
 
         if item.stock is None:
-                item.stock = 1
+            item.stock = 1
         else:
             try:
                 item.stock = int(item.stock.replace("disponibles", "").strip())
             except ValueError:
-                    stock_text = item.stock.lower()
-                    if "agotado" in stock_text:
-                        item.stock = 0
-                    else:
-                        item.stock = 0
+                # "Agotado" u otro texto sin cantidad numerica
+                item.stock = 0
 
         for key, value in vars(item).items():
             if isinstance(value, str):
@@ -42,5 +39,5 @@ class SpeedScrapyPipeline:
 
         for key, value in temp_dict.items():
             setattr(item, key, value)
-        
+
         return item
