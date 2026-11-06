@@ -1,4 +1,4 @@
-# Speedlogic Scraper · EA1 Programación para Análisis de Datos
+# Speedlogic Scraper · EA1 y EA2 Programación para Análisis de Datos
 
 Extracción con **Scrapy** de las fichas técnicas y los precios de los **portátiles** y los **computadores de escritorio** de la tienda colombiana [speedlogic.com.co](https://speedlogic.com.co), con limpieza y análisis descriptivo en **pandas**.
 
@@ -41,6 +41,8 @@ scrappingv1-app/
 ├── requirements.txt
 ├── pyproject.toml / uv.lock             # alternativa con uv
 ├── Analizando_EA1.ipynb   # limpieza, análisis y métricas con pandas
+├── tests/                                # pruebas con pytest
+├── .github/workflows/                    # ci.yml (CI) y deploy.yml (CD)
 └── speed_scrapy/                         # proyecto Scrapy
     ├── scrapy.cfg
     ├── laptop_summary.csv                # salida del spider "laptops"
@@ -65,7 +67,7 @@ source .venv/bin/activate        # en Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-Con [uv](https://docs.astral.sh/uv/) también sirve `uv sync` (solo instala Scrapy; para el notebook hay que añadir `pandas`, `matplotlib` e `ipykernel`).
+Con [uv](https://docs.astral.sh/uv/) también sirve Con [uv](https://docs.astral.sh/uv/) también sirve `uv sync` (instala Scrapy y pytest; para el notebook hay que añadir `pandas`, `matplotlib` e `ipykernel`). (solo instala Scrapy; para el notebook hay que añadir `pandas`, `matplotlib` e `ipykernel`).
 
 ## Cómo ejecutarlo
 
@@ -81,6 +83,35 @@ scrapy crawl desktops -O desktop_summary.csv -s DOWNLOAD_DELAY=30
 
 Para el análisis, abre `Analizando_EA1.ipynb` en VS Code o Jupyter con el kernel del `.venv` y ejecuta todas las celdas desde la raíz del repositorio. El notebook genera `speedlogic_productos_limpio.csv`.
 
+## Flujo DevOps (EA2)
+
+**Ramas.** `main` es la versión estable y publicada; `develop` integra el trabajo; cada tarea se hace en una rama `feature/*` o `docs/*` creada desde `develop`. Nadie hace commit directo a `main` ni a `develop`.
+
+```text
+feature/* ──PR──> develop ──PR──> main ──> Deploy (GitHub Pages)
+              (CI)           (CI)      (pruebas + publicación)
+```
+
+**Commits.** Mensajes con prefijo: `feat`, `fix`, `test`, `refactor`, `ci`, `docs`, `chore`.
+
+**Integración continua (CI).** `.github/workflows/ci.yml` se ejecuta en cada push a `main` y `develop` y en cada Pull Request: instala dependencias con `uv sync` y corre `uv run pytest -v`. Un Pull Request solo se une si el CI queda en verde.
+
+**Despliegue continuo (CD).** `.github/workflows/deploy.yml` se ejecuta al llegar código a `main`: corre las pruebas, convierte `Analizando_EA1.ipynb` a HTML y lo publica en GitHub Pages. Si las pruebas fallan, no se despliega.
+
+Página publicada: https://zentinelj.github.io/EA1_Programaci-n-para-an-lisis-de-datos/
+
+**Pruebas automatizadas.** Hay 18 pruebas en `tests/`, sin conexión a Speedlogic:
+
+- `test_pipeline.py`: conversión de precios, existencias (`None`, número, agotado) y limpieza de textos.
+- `test_spiders.py` y `test_desktop_spider.py`: extracción de campos con HTML de ejemplo, fichas con y sin descuento, y seguimiento de enlaces y paginación.
+- `conftest.py`: agrega `speed_scrapy/` al path para importar el paquete.
+
+```bash
+uv sync
+uv run pytest -v
+```
+
+**Limitación.** La página publicada muestra las salidas ya guardadas en el notebook; no vuelve a ejecutar el análisis ni el scraping.
 
 
 ## Autores
