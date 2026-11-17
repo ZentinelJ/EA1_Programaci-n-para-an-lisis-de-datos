@@ -1,0 +1,64 @@
+# Despliegue continuo de la aplicacion web (Streamlit) en Render.
+#
+# Flujo: push a main -> pruebas (job "test") -> si pasan, se avisa a Render
+# (job "deploy") mediante un deploy hook -> Render construye y publica la app.
+name: Deploy app (Render)
+
+on:
+  push:
+    branches: [main]      # solo cuando llegan cambios a la rama estable
+  workflow_dispatch:      # permite lanzarlo a mano desde la pestana Actions
+
+# Evita que dos despliegues corran al mismo tiempo; el segundo espera al primero.
+concurrency:
+  group: deploy-render
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4          # descarga el codigo del repositorio
+      - uses: astral-sh/setup-uv@v5        # instala uv (gestor de dependencias)
+      - run: uv sync                       # instala las dependencias del proyecto
+      - run: uv run pytest -v              # ejecuta las pruebas (30 en total)
+
+  deploy:
+    needs: test                            # solo se despliega si "test" termino en verde
+    runs-on: ubuntu-latest
+    env:
+      # Secreto: URL del deploy hook de Render (Settings > Secrets and variables > Actions > Secrets).
+      # Quien conozca esta URL puede lanzar un despliegue, por eso nunca va en el codigo.
+      RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+      # Variable (no secreta): direccion publica de la app, usada para verificar el despliegue
+      # (Settings > Secrets and variables > Actions > Variables).
+      APP_URL: ${{ vars.APP_URL }}
+    steps:
+      - name: Disparar el despliegue en Render
+        run: |
+          # Si el secreto aun no esta configurado, se omite el despliegue sin marcar error.
+          if [ -z "$RENDER_DEPLOY_HOOK_URL" ]; then
+            echo "::warning::RENDER_DEPLOY_HOOK_URL no esta configurado; se omite el despliegue."
+            exit 0
+          fi
+          # Una peticion HTTP al hook inicia el despliegue. Render responde con el id del despliegue.
+          # --fail hace que curl falle (y el job quede en rojo) si Render responde con un error.
+          curl --fail --silent --show-error --max-time 60 "$RENDER_DEPLOY_HOOK_URL"
+          echo
+
+      - name: Verificar que la aplicacion responde
+        # Solo se ejecuta si hay hook y direccion publica configurados.
+        if: env.RENDER_DEPLOY_HOOK_URL != '' && env.APP_URL != ''
+        run: |
+          # Streamlit expone /_stcore/health. Se consulta cada 20 s, hasta 30 veces (10 minutos),
+          # porque el plan gratuito de Render puede tardar en arrancar la app.
+          for i in $(seq 1 30); do
+            if curl --fail --silent --max-time 20 "$APP_URL/_stcore/health" > /dev/null; then
+              echo "La aplicacion respondio (intento $i)."
+              exit 0
+            fi
+            echo "Sin respuesta aun (intento $i de 30). Esperando 20 s..."
+            sleep 20
+          done
+          echo "::error::La aplicacion no respondio en 10 minutos."
+          exit 1
