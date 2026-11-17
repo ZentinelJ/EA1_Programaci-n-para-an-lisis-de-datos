@@ -50,14 +50,19 @@ jobs:
         # Solo se ejecuta si hay hook y direccion publica configurados.
         if: env.RENDER_DEPLOY_HOOK_URL != '' && env.APP_URL != ''
         run: |
-          # Streamlit expone /_stcore/health. Se consulta cada 20 s, hasta 30 veces (10 minutos),
-          # porque el plan gratuito de Render puede tardar en arrancar la app.
+          # Se quita la barra final de APP_URL (si la tiene) para no armar una URL con doble barra.
+          # Streamlit expone /_stcore/health: responde 200 cuando la app esta activa.
+          URL="${APP_URL%/}/_stcore/health"
+          # Se consulta cada 20 s, hasta 30 veces (10 minutos), porque el plan gratuito de Render
+          # puede tardar en arrancar la app.
           for i in $(seq 1 30); do
-            if curl --fail --silent --max-time 20 "$APP_URL/_stcore/health" > /dev/null; then
+            # --write-out imprime solo el codigo HTTP; "|| true" evita que un fallo de red detenga el script.
+            CODIGO=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 20 "$URL" || true)
+            if [ "$CODIGO" = "200" ]; then
               echo "La aplicacion respondio (intento $i)."
               exit 0
             fi
-            echo "Sin respuesta aun (intento $i de 30). Esperando 20 s..."
+            echo "Sin respuesta aun (intento $i de 30, codigo HTTP: $CODIGO). Esperando 20 s..."
             sleep 20
           done
           echo "::error::La aplicacion no respondio en 10 minutos."
